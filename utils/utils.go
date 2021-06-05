@@ -2,6 +2,7 @@ package utils
 
 import (
 	"database/sql"
+	"fmt"
 
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -67,11 +68,34 @@ func DbQuery(dbFile string, query string, params ...interface{}) (QueryData, err
 		for i, _ := range cols {
 			receiver[i] = &recData[i]
 		}
-		rows.Scan(receiver...)
+		err = rows.Scan(receiver...)
+		if err != nil {
+			return nil, err
+		}
 		for i, col := range cols {
 			rec[col] = recData[i]
 		}
 		ret = append(ret, rec)
 	}
+	return ret, nil
+}
+
+func DbCount(dbFile string, tableName string) (int64, error) {
+	db, err := sql.Open("sqlite3", dbFile)
+	if err != nil {
+		return 0, err
+	}
+	defer db.Close()
+
+	query := fmt.Sprintf("SELECT COUNT(*) FROM %s", tableName)
+
+	rows, err := db.Query(query)
+	if err != nil {
+		return 0, err
+	}
+	defer rows.Close()
+	rows.Next()
+	var ret int64
+	rows.Scan(&ret)
 	return ret, nil
 }
