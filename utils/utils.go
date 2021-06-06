@@ -39,9 +39,13 @@ func DbExecCommand(dbFile string, sqlCommand string, parameters ...interface{}) 
 	return sqlResult, nil
 }
 
-type QueryData []map[string]interface{}
+type QueryResult struct {
+	Columns     []string
+	ColumnTypes []string
+	DataRows    [][]interface{}
+}
 
-func DbQuery(dbFile string, query string, params ...interface{}) (QueryData, error) {
+func DbQuery(dbFile string, query string, params ...interface{}) (*QueryResult, error) {
 
 	db, err := sql.Open("sqlite3", dbFile)
 	if err != nil {
@@ -53,29 +57,37 @@ func DbQuery(dbFile string, query string, params ...interface{}) (QueryData, err
 		return nil, err
 	}
 	defer rows.Close()
-	cols, err := rows.Columns()
+
+	columnTypes, err := rows.ColumnTypes()
 	if err != nil {
 		return nil, err
 	}
 
-	var ret QueryData
+	ret := &QueryResult{
+		Columns:     make([]string, len(columnTypes)),
+		ColumnTypes: make([]string, len(columnTypes)),
+		DataRows:    make([][]interface{}, 0),
+	}
+
+	for i, v := range columnTypes {
+		ret.Columns[i] = v.Name()
+		ret.ColumnTypes[i] = v.DatabaseTypeName()
+	}
+
 	var recData []interface{}
 	var receiver []interface{}
 	for rows.Next() {
-		rec := make(map[string]interface{})
-		recData = make([]interface{}, len(cols))
-		receiver = make([]interface{}, len(cols))
-		for i, _ := range cols {
+		recData = make([]interface{}, len(columnTypes))
+		receiver = make([]interface{}, len(columnTypes))
+		for i := range columnTypes {
 			receiver[i] = &recData[i]
 		}
 		err = rows.Scan(receiver...)
 		if err != nil {
 			return nil, err
 		}
-		for i, col := range cols {
-			rec[col] = recData[i]
-		}
-		ret = append(ret, rec)
+
+		ret.DataRows = append(ret.DataRows, recData)
 	}
 	return ret, nil
 }

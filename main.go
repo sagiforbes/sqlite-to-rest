@@ -82,7 +82,7 @@ func main() {
 
 	e.Pre(middleware.RemoveTrailingSlash())
 
-	//------- register endpoints
+	//------------ json type responses
 	e.GET("/:table", getTable)
 	e.GET("/:table/count", countTableRecord)
 
