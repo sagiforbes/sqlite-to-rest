@@ -42,7 +42,7 @@ func DbExecCommand(dbFile string, sqlCommand string, parameters ...interface{}) 
 type QueryResult struct {
 	Columns     []string
 	ColumnTypes []string
-	DataRows    [][]interface{}
+	Data        [][]interface{}
 }
 
 func DbQuery(dbFile string, query string, params ...interface{}) (*QueryResult, error) {
@@ -66,7 +66,7 @@ func DbQuery(dbFile string, query string, params ...interface{}) (*QueryResult, 
 	ret := &QueryResult{
 		Columns:     make([]string, len(columnTypes)),
 		ColumnTypes: make([]string, len(columnTypes)),
-		DataRows:    make([][]interface{}, 0),
+		Data:        make([][]interface{}, 0),
 	}
 
 	for i, v := range columnTypes {
@@ -87,7 +87,7 @@ func DbQuery(dbFile string, query string, params ...interface{}) (*QueryResult, 
 			return nil, err
 		}
 
-		ret.DataRows = append(ret.DataRows, recData)
+		ret.Data = append(ret.Data, recData)
 	}
 	return ret, nil
 }
